@@ -47,7 +47,9 @@ jobs:
 
       - name: Package artifact
         run: |
-          ditto -c -k --sequesterRsrc --keepParent dist/PDFTranMd.app PDFTranMd-macos-arm64.zip
+          mkdir -p package/PDFTranMd-macos-arm64
+          cp -R dist/PDFTranMd.app package/PDFTranMd-macos-arm64/
+          ditto -c -k --sequesterRsrc --keepParent package/PDFTranMd-macos-arm64 PDFTranMd-macos-arm64.zip
 
       - name: Upload artifact
         uses: actions/upload-artifact@v6
@@ -113,6 +115,10 @@ jobs:
           path: release-assets
           merge-multiple: true
 
+      - name: Generate checksums
+        working-directory: release-assets
+        run: shasum -a 256 *.zip > SHA256SUMS.txt
+
       - name: Publish GitHub Release
         if: startsWith(github.ref, 'refs/tags/')
         env:
@@ -125,4 +131,4 @@ jobs:
               --title "PDFTranMd $TAG_NAME" \
               --notes "Desktop builds for macOS Apple Silicon and Windows x64."
           fi
-          gh release upload "$TAG_NAME" release-assets/*.zip --repo "$GITHUB_REPOSITORY" --clobber
+          gh release upload "$TAG_NAME" release-assets/*.zip release-assets/SHA256SUMS.txt --repo "$GITHUB_REPOSITORY" --clobber

@@ -38,8 +38,15 @@ https://github.com/p1aymaker9/pdfTranMd/releases
 当前自动发布的产物：
 - `PDFTranMd-macos-arm64.zip`：Apple Silicon arm64，适用于 M2 及之后的 Mac
 - `PDFTranMd-windows-x64.zip`：Windows x64
+- `SHA256SUMS.txt`：发布包 SHA-256 校验清单
 
-macOS 版本未做 Apple Developer ID 签名和 notarization 时，系统可能提示无法验证开发者。此时可右键应用并选择“打开”。
+macOS 使用方式：解压 `PDFTranMd-macos-arm64.zip`，运行 `PDFTranMd-macos-arm64/PDFTranMd.app`。
+
+Windows 使用方式：解压 `PDFTranMd-windows-x64.zip`，运行 `PDFTranMd/PDFTranMd.exe`。
+
+macOS 版本暂未做 Apple Developer ID 签名和 notarization，系统可能提示无法验证开发者。首次运行时可右键应用并选择“打开”，或在“系统设置”中允许打开。
+
+可选校验：下载 zip 后可用 SHA-256 工具计算摘要，并与 `SHA256SUMS.txt` 中的值对比，确认下载文件完整。
 
 ## 桌面应用打包
 仓库包含 GitHub Actions 配置，可在没有 Mac 或 Windows 设备的情况下用 GitHub runner 打包。
@@ -53,7 +60,7 @@ git tag v0.1.4
 git push origin v0.1.4
 ```
 
-tag 构建成功后，CI 会创建对应版本的 GitHub Release，并上传 macOS 与 Windows 两个 zip。Actions artifact 也会保留一份用于调试。
+tag 构建成功后，CI 会创建对应版本的 GitHub Release，并上传 macOS 与 Windows 两个 zip，以及 `SHA256SUMS.txt` 校验清单。Actions artifact 也会保留一份用于调试。
 
 本地 macOS 打包命令：
 
@@ -78,7 +85,7 @@ pyinstaller --clean --noconfirm PDFTranMd.windows.spec
 - `pdf_tran_md/`：核心逻辑与 UI
 - `PDFTranMd.spec`：macOS Apple Silicon PyInstaller 配置
 - `PDFTranMd.windows.spec`：Windows x64 PyInstaller 配置
-- `.github/workflows/build-macos.yml`：桌面应用自动打包与 Release 发布流程
+- `.github/workflows/build-desktop.yml`：桌面应用自动打包与 Release 发布流程
 - 运行产物：
   - `*_translated.md`
   - `*_translated.pdf`
