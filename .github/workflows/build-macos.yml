@@ -119,9 +119,10 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           TAG_NAME: ${{ github.ref_name }}
         run: |
-          if ! gh release view "$TAG_NAME" >/dev/null 2>&1; then
+          if ! gh release view "$TAG_NAME" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
             gh release create "$TAG_NAME" \
+              --repo "$GITHUB_REPOSITORY" \
               --title "PDFTranMd $TAG_NAME" \
               --notes "Desktop builds for macOS Apple Silicon and Windows x64."
           fi
-          gh release upload "$TAG_NAME" release-assets/*.zip --clobber
+          gh release upload "$TAG_NAME" release-assets/*.zip --repo "$GITHUB_REPOSITORY" --clobber
