@@ -29,6 +29,25 @@ python3 app.py
 python3 -m py_compile app.py
 ```
 
+## macOS Apple Silicon 打包
+仓库包含 GitHub Actions 配置，可在没有 Mac 设备的情况下用 GitHub 的 macOS arm64 runner 打包。
+
+触发方式：
+- 在 GitHub 仓库页面进入 `Actions` -> `Build macOS App` -> `Run workflow`
+- 或推送 `v*` 形式的 tag，例如 `v0.1.0`
+
+打包产物会上传为 `PDFTranMd-macos-arm64` artifact，里面包含 `PDFTranMd.app`。目标架构是 Apple Silicon arm64，适用于 M2 及之后的 Mac。
+
+本地 macOS 打包命令：
+
+```bash
+pip install -r requirements.txt
+pip install pyinstaller
+pyinstaller --clean --noconfirm PDFTranMd.spec
+```
+
+`PDFTranMd.spec` 已排除当前未使用的 Qt 模块，以减少 PySide6 打包体积。
+
 ## 项目结构
 - `app.py`：应用入口
 - `pdf_tran_md/`：核心逻辑与 UI
