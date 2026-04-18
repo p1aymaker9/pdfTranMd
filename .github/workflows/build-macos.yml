@@ -1,4 +1,4 @@
-name: Build macOS App
+name: Build Desktop Apps
 
 on:
   workflow_dispatch:
@@ -11,7 +11,7 @@ permissions:
 
 jobs:
   build-apple-silicon:
-    name: Build Apple Silicon app
+    name: Build macOS Apple Silicon app
     runs-on: macos-14
 
     steps:
@@ -56,6 +56,63 @@ jobs:
           path: PDFTranMd-macos-arm64.zip
           if-no-files-found: error
 
+  build-windows:
+    name: Build Windows app
+    runs-on: windows-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v6
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+          architecture: "x64"
+          cache: "pip"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install pyinstaller
+
+      - name: Validate syntax
+        run: python -m py_compile app.py PDFTranMd.windows.spec
+
+      - name: Build Windows app
+        run: pyinstaller --clean --noconfirm PDFTranMd.windows.spec
+
+      - name: Inspect bundle size
+        run: |
+          $size = (Get-ChildItem -Recurse dist\PDFTranMd | Measure-Object Length -Sum).Sum
+          "{0:N1} MB" -f ($size / 1MB)
+
+      - name: Package artifact
+        run: Compress-Archive -Path dist\PDFTranMd -DestinationPath PDFTranMd-windows-x64.zip
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v6
+        with:
+          name: PDFTranMd-windows-x64
+          path: PDFTranMd-windows-x64.zip
+          if-no-files-found: error
+
+  publish-release:
+    name: Publish GitHub Release
+    runs-on: ubuntu-latest
+    needs:
+      - build-apple-silicon
+      - build-windows
+    if: startsWith(github.ref, 'refs/tags/')
+
+    steps:
+      - name: Download build artifacts
+        uses: actions/download-artifact@v7
+        with:
+          path: release-assets
+          merge-multiple: true
+
       - name: Publish GitHub Release
         if: startsWith(github.ref, 'refs/tags/')
         env:
@@ -65,6 +122,6 @@ jobs:
           if ! gh release view "$TAG_NAME" >/dev/null 2>&1; then
             gh release create "$TAG_NAME" \
               --title "PDFTranMd $TAG_NAME" \
-              --notes "Apple Silicon arm64 build for M2 and later Macs."
+              --notes "Desktop builds for macOS Apple Silicon and Windows x64."
           fi
-          gh release upload "$TAG_NAME" PDFTranMd-macos-arm64.zip --clobber
+          gh release upload "$TAG_NAME" release-assets/*.zip --clobber
